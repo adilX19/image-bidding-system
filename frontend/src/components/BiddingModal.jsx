@@ -33,8 +33,8 @@ export default function BiddingModal(props) {
                 withCredentials: true,
             });
 
-            if (response.status == 200) {
-                navigate(`/customer/image/${props.image_id}`);
+            if (response.status == 201) {
+                navigate(`/customer/bids`);
             }
 
         } catch (err) {

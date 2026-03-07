@@ -52,7 +52,7 @@ export default function CustomerDashboard() {
                                     </Card.Text>
                                     <span style={{ position: 'absolute', top: 'auto', bottom: '50px', fontWeight: '500' }} className='text-dark bold'>Starting bid: $.{image.starting_price}
                                     </span> <br />
-                                    <Button onClick={(e) => {navigateToDetailsPage(e.target.value)}} style={{ position: 'absolute', top: 'auto', bottom: '10px', borderRadius: '5px', boxShadow: 'rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px' }} size='sm' variant="dark" value={image.id}>Bid Now</Button>
+                                    <Button onClick={() => navigateToDetailsPage(image.id)} style={{ position: 'absolute', top: 'auto', bottom: '10px', borderRadius: '5px', boxShadow: 'rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px' }} size='sm' variant="dark">Bid Now</Button>
 
                                 </Card.Body>
                             </Card>

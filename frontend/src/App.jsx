@@ -6,12 +6,17 @@ import Logout from './components/Logout';
 // ADMIN COMPONENTS IMPORTS
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ImageUpload from './pages/Admin/ImageUpload';
+import AdminImageList from './pages/Admin/AdminImageList';
+import AdminImageEdit from './pages/Admin/AdminImageEdit';
 import CustomerBoard from './pages/Admin/CustomerBoard';
-
+import AdminBidApproval from './pages/Admin/AdminBidApproval';
+import AdminTransactions from './pages/Admin/AdminTransactions';
 
 // CUSTOMER COMPONENTS IMPORTS
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
 import BidPlacer from './pages/Customer/BidPlacer';
+import BidStatus from './pages/Customer/BidStatus';
+import CustomerTransactions from './pages/Customer/CustomerTransactions';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -64,6 +69,50 @@ function App() {
           />
 
           <Route
+            path="/admin/images"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <AdminImageList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/images/:id/edit"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <AdminImageEdit />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/bids"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <AdminBidApproval />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/transactions"
+            element={
+              <ProtectedRoute role="admin">
+                <Layout>
+                  <AdminTransactions />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/customer"
             element={
               <ProtectedRoute role="customer">
@@ -85,6 +134,27 @@ function App() {
             }
           />
 
+          <Route
+            path="/customer/bids"
+            element={
+              <ProtectedRoute role="customer">
+                <Layout>
+                  <BidStatus />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/customer/transactions"
+            element={
+              <ProtectedRoute role="customer">
+                <Layout>
+                  <CustomerTransactions />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
 
         </Routes>
       </Router>

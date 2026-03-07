@@ -19,16 +19,19 @@ function Header() {
                 <Navbar.Collapse id="responsive-navbar-nav">
                     {/* admin specific options */}
                     {user?.role === 'admin' && (<Nav className="me-auto">
-                        <Nav.Link href="/admin">Admin Dashboard</Nav.Link>
-                        <Nav.Link href="#pricing">Bid Management</Nav.Link>
+                        <Nav.Link href="/admin">Dashboard</Nav.Link>
+                        <Nav.Link href="/admin/images">Images</Nav.Link>
                         <Nav.Link href="/admin/upload/image">Upload Image</Nav.Link>
                         <Nav.Link href="/admin/customers">Customers</Nav.Link>
+                        <Nav.Link href="/admin/bids">Bid Management</Nav.Link>
+                        <Nav.Link href="/admin/transactions">Transactions</Nav.Link>
                     </Nav>)}
 
                     {/* customer specific options */}
                     {user?.role === 'customer' && (<Nav className="me-auto">
                         <Nav.Link href="/customer">Assigned Images</Nav.Link>
-                        <Nav.Link href="#pricing">My Bids</Nav.Link>
+                        <Nav.Link href="/customer/bids">My Bids</Nav.Link>
+                        <Nav.Link href="/customer/transactions">Transactions</Nav.Link>
                     </Nav>)}
 
                     <Nav>
