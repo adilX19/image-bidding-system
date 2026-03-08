@@ -1,65 +1,89 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import Header from '../../components/Header';
-import Container from 'react-bootstrap/esm/Container';
+import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
-import Badge from 'react-bootstrap/Badge';
-import BidPlacer from './BidPlacer';
 import { useNavigate } from "react-router-dom";
 
 export default function CustomerDashboard() {
-
     const navigate = useNavigate();
     const [images, setImages] = useState([]);
     const [error, setError] = useState(null);
-
-    const navigateToDetailsPage = (id) => {
-        navigate('/customer/image/' + id);
-    };
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchImages = async () => {
-
             try {
                 const response = await api.get('/customer/assigned/images', { withCredentials: true });
-                if (response.status == 200) {
-                    setImages(response.data)
-                }
+                if (response.status === 200) setImages(response.data);
             } catch (err) {
-                setError(err.response ? err.response.data : 'Error fetching data');
+                setError('Failed to load images.');
+            } finally {
+                setLoading(false);
             }
-        }
+        };
         fetchImages();
-    }, [])
-
+    }, []);
 
     return (
-        <>
-            <Container style={{ marginTop: '100px' }}>
-                <h3>Featured Items</h3>
-                <Row className="mt-5">
-                    {images.map((image) => (
-                        <Col key={image.id} className='mb-4'>
-                            <Card style={{ width: '18rem', position: 'relative', padding: '10px', borderRadius: '35px', boxShadow: 'rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px' }} className='h-100 pb-4'>
-                                <Card.Img variant="top" style={{ objectFit: 'cover', width: '100%;', height: '160px', borderRadius: '30px' }} src={'http://localhost:5000/' + image.image_path} />
-                                <Card.Body>
-                                    <Card.Title>{image.title}</Card.Title>
-                                    <Card.Text className='mb-4 text-secondary'>
-                                        {image.description}
-                                    </Card.Text>
-                                    <span style={{ position: 'absolute', top: 'auto', bottom: '50px', fontWeight: '500' }} className='text-dark bold'>Starting bid: $.{image.starting_price}
-                                    </span> <br />
-                                    <Button onClick={() => navigateToDetailsPage(image.id)} style={{ position: 'absolute', top: 'auto', bottom: '10px', borderRadius: '5px', boxShadow: 'rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px' }} size='sm' variant="dark">Bid Now</Button>
+        <div className="page-wrapper">
+            <Container>
+                <div className="section-header">
+                    <h4>Assigned Images</h4>
+                    {!loading && (
+                        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                            {images.length} item{images.length !== 1 ? 's' : ''} available
+                        </span>
+                    )}
+                </div>
 
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    ))}
-                </Row>
+                {error && <p style={{ color: 'var(--danger)', fontSize: '14px' }}>{error}</p>}
+
+                {loading && <p className="text-muted">Loading images...</p>}
+
+                {!loading && images.length === 0 && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 24px',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius)',
+                        color: 'var(--text-muted)',
+                        fontSize: '14px'
+                    }}>
+                        No images have been assigned to you yet.
+                    </div>
+                )}
+
+                {!loading && images.length > 0 && (
+                    <Row className="g-4">
+                        {images.map((image) => (
+                            <Col key={image.id} xs={12} sm={6} md={4} lg={3}>
+                                <div className="image-card">
+                                    <img
+                                        src={`http://localhost:5000/${image.image_path}`}
+                                        alt={image.title}
+                                    />
+                                    <div className="card-body-custom">
+                                        <div className="card-title">{image.title}</div>
+                                        <div className="card-desc">{image.description}</div>
+                                        <div className="price-tag">Starting bid: ${image.starting_price}</div>
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            className="w-100"
+                                            onClick={() => navigate('/customer/image/' + image.id)}
+                                        >
+                                            Bid Now
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Col>
+                        ))}
+                    </Row>
+                )}
             </Container>
-        </>
+        </div>
     );
-};
+}

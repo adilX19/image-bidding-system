@@ -7,66 +7,69 @@ import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 export default function BiddingModal(props) {
-
-    const [show, setShow] = useState(true);
-    const [amount, setAmount] = useState(null);
+    const [amount, setAmount] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setError('');
 
-        const data = { image_id: props.image_id, amount: amount }
-
-        console.log("Data:", data)
-
-        if (amount == 0) {
-            setError('Amount cannot be zero.');
-            return
+        if (!amount || parseFloat(amount) <= 0) {
+            setError('Please enter a valid bid amount.');
+            return;
         }
 
         try {
-            const response = await api.post('/customer/place/bid', data, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-                withCredentials: true,
-            });
+            const response = await api.post(
+                '/customer/place/bid',
+                { image_id: props.image_id, amount },
+                { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
+            );
 
-            if (response.status == 201) {
-                navigate(`/customer/bids`);
-            }
-
+            if (response.status === 201) navigate('/customer/bids');
         } catch (err) {
-            console.log(err.message)
-            setError(err.response?.data?.error || 'Login failed. Please try again.');
+            setError(err.response?.data?.message || 'Failed to place bid. Please try again.');
         }
-    }
+    };
 
     return (
-        <Modal
-            {...props}
-            size="lg"
-            aria-labelledby="contained-modal-title-vcenter"
-            centered
-        >
+        <Modal {...props} size="md" centered>
             <Form onSubmit={handleSubmit}>
                 <Modal.Header closeButton>
-                    <Modal.Title id="contained-modal-title-vcenter">
-                        Modal heading
-                    </Modal.Title>
+                    <Modal.Title>Place a Bid</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
 
-                    {error && <Alert onClose={() => setShow(false)} dismissible key='danger' variant='danger'>{error}</Alert>}
-                    <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label>Amount</Form.Label>
-                        <Form.Control type='number' value={amount} onChange={(e) => { setAmount(e.target.value) }} placeholder="Enter Bidding Amount..." />
+                <Modal.Body style={{ padding: '24px' }}>
+                    {error && (
+                        <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>
+                    )}
+
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '18px', lineHeight: 1.6 }}>
+                        Your bid must exceed the starting price and any existing bids on this image.
+                    </p>
+
+                    <Form.Group>
+                        <Form.Label>Bid Amount ($)</Form.Label>
+                        <Form.Control
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="e.g. 150.00"
+                            min="0"
+                            step="0.01"
+                            required
+                        />
                     </Form.Group>
                 </Modal.Body>
+
                 <Modal.Footer>
-                    <Button type='submit' variant='dark'>Submit</Button>
-                    <Button type='button' onClick={props.onHide} variant='danger'>Close</Button>
+                    <Button type="button" variant="outline-secondary" onClick={props.onHide}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" variant="primary">
+                        Submit Bid
+                    </Button>
                 </Modal.Footer>
             </Form>
         </Modal>

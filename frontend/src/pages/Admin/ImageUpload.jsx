@@ -1,119 +1,182 @@
 import React, { useState, useEffect } from "react";
 import api from '../../services/api';
-import Container from 'react-bootstrap/esm/Container';
+import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import Card from 'react-bootstrap/Card';
+import Alert from 'react-bootstrap/Alert';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 export default function ImageUpload() {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    starting_price: "",
-    assigned_to: ""
-  });
-
-
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState("");
-  const [customers, setCustomers] = useState([]);
-
-
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      const response = await api.get('/admin/customers/list', { withCredentials: true });
-
-      if (response.status == 200) {
-        setCustomers(response.data)
-      }
-    }
-    fetchCustomers();
-  }, [])
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!selectedFile) {
-      setUploadStatus("Please select a file before uploading.");
-      return;
-    }
-
-    const data = new FormData();
-    data.append("image", selectedFile);
-    Object.keys(formData).forEach((key) => data.append(key, formData[key]));
-
-    try {
-      const response = await api.post("/admin/upload/image", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        withCredentials: true,
-      });
-
-      setUploadStatus(`Upload successful: ${response.data.message}`);
-      setFormData({
+    const [formData, setFormData] = useState({
         title: "",
         description: "",
         starting_price: "",
         assigned_to: ""
-      });
-      event.target.reset();
-      
-    } catch (error) {
-      setUploadStatus(`Upload failed: ${error.response?.data?.message || error.message}`);
-    }
-  };
+    });
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [uploadStatus, setUploadStatus] = useState(null);
+    const [customers, setCustomers] = useState([]);
 
-  return (
-    <Container className='mt-4 w-50'>
-      <Card>
-        <Card.Body>
-          <h4 className="mt-4 mb-4">Upload an Image for Bidding</h4>
-          <Form onSubmit={handleSubmit}>
-            {uploadStatus && <p>{uploadStatus}</p>}
-            <Form.Group className="mb-3" controlId="title">
-              <Form.Label>Title</Form.Label>
-              <Form.Control name="title" type="text" value={formData.title} onChange={handleInputChange} placeholder="Title of the image..." required />
-            </Form.Group>
+    useEffect(() => {
+        const fetchCustomers = async () => {
+            const response = await api.get('/admin/customers/list', { withCredentials: true });
+            if (response.status === 200) setCustomers(response.data);
+        };
+        fetchCustomers();
+    }, []);
 
-            <Form.Group className="mb-3" controlId="description">
-              <Form.Label>Description</Form.Label>
-              <Form.Control name="description" type="text" value={formData.description} onChange={handleInputChange} placeholder="Describe the image." required />
-            </Form.Group>
+    const handleInputChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-            <Form.Group className="mb-3" controlId="starting-price">
-              <Form.Label>Starting Price</Form.Label>
-              <Form.Control name="starting_price" type="number" value={formData.starting_price} onChange={handleInputChange} placeholder="bidding price ($20.5, $75 etc)" required />
-            </Form.Group>
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        setSelectedFile(file);
+        if (file) setPreview(URL.createObjectURL(file));
+    };
 
-            <Form.Select aria-label="Default select example" name="assigned_to" onChange={handleInputChange}>
-              <option disabled selected>Select Customer</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.username} ({customer.email})
-                </option>
-              ))}
-            </Form.Select>
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setUploadStatus(null);
 
-            <Form.Group controlId="formFile" className="mb-3">
-              <Form.Label>Default file input example</Form.Label>
-              <Form.Control type="file" accept="image/*" onChange={handleFileChange} />
-            </Form.Group>
+        if (!selectedFile) {
+            setUploadStatus({ type: 'error', message: 'Please select an image file.' });
+            return;
+        }
 
-            <Button variant="primary" type="submit">
-              Upload
-            </Button>
-          </Form>
-        </Card.Body>
-      </Card>
-    </Container>
-  );
-};
+        const data = new FormData();
+        data.append("image", selectedFile);
+        Object.keys(formData).forEach((key) => data.append(key, formData[key]));
+
+        try {
+            await api.post("/admin/upload/image", data, {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+            });
+
+            setUploadStatus({ type: 'success', message: 'Image uploaded successfully.' });
+            setFormData({ title: "", description: "", starting_price: "", assigned_to: "" });
+            setSelectedFile(null);
+            setPreview(null);
+            event.target.reset();
+        } catch (error) {
+            setUploadStatus({ type: 'error', message: error.response?.data?.message || 'Upload failed.' });
+        }
+    };
+
+    return (
+        <div className="page-wrapper">
+            <Container>
+                <div className="section-header" style={{ marginBottom: '28px' }}>
+                    <h4>Upload Image for Bidding</h4>
+                </div>
+
+                <Row className="g-4 justify-content-center">
+                    <Col xs={12} lg={7}>
+                        <div className="form-card">
+                            {uploadStatus && (
+                                <Alert
+                                    variant={uploadStatus.type === 'success' ? 'success' : 'danger'}
+                                    dismissible
+                                    onClose={() => setUploadStatus(null)}
+                                >
+                                    {uploadStatus.message}
+                                </Alert>
+                            )}
+
+                            <Form onSubmit={handleSubmit}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Title</Form.Label>
+                                    <Form.Control
+                                        name="title"
+                                        type="text"
+                                        value={formData.title}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter image title"
+                                        required
+                                    />
+                                </Form.Group>
+
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Description</Form.Label>
+                                    <Form.Control
+                                        name="description"
+                                        as="textarea"
+                                        rows={3}
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        placeholder="Describe the image"
+                                        required
+                                    />
+                                </Form.Group>
+
+                                <Row className="g-3 mb-3">
+                                    <Col sm={6}>
+                                        <Form.Group>
+                                            <Form.Label>Starting Price ($)</Form.Label>
+                                            <Form.Control
+                                                name="starting_price"
+                                                type="number"
+                                                value={formData.starting_price}
+                                                onChange={handleInputChange}
+                                                placeholder="e.g. 50.00"
+                                                min="0"
+                                                step="0.01"
+                                                required
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col sm={6}>
+                                        <Form.Group>
+                                            <Form.Label>Assign to Customer</Form.Label>
+                                            <Form.Select name="assigned_to" value={formData.assigned_to} onChange={handleInputChange} required>
+                                                <option value="" disabled>Select customer</option>
+                                                {customers.map((c) => (
+                                                    <option key={c.id} value={c.id}>
+                                                        {c.username} ({c.email})
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+
+                                <Form.Group className="mb-4">
+                                    <Form.Label>Image File</Form.Label>
+                                    <Form.Control
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        required
+                                    />
+                                </Form.Group>
+
+                                {preview && (
+                                    <div className="mb-4">
+                                        <img
+                                            src={preview}
+                                            alt="Preview"
+                                            style={{
+                                                width: '100%',
+                                                maxHeight: '220px',
+                                                objectFit: 'cover',
+                                                borderRadius: 'var(--radius-sm)',
+                                                border: '1px solid var(--border)'
+                                            }}
+                                        />
+                                    </div>
+                                )}
+
+                                <Button variant="primary" type="submit" className="w-100">
+                                    Upload Image
+                                </Button>
+                            </Form>
+                        </div>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
+    );
+}

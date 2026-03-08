@@ -3,8 +3,9 @@ import api from "../../services/api";
 import Container from "react-bootstrap/Container";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-import Card from "react-bootstrap/Card";
 import Alert from "react-bootstrap/Alert";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function AdminImageEdit() {
@@ -18,6 +19,7 @@ export default function AdminImageEdit() {
         assigned_to: "",
     });
     const [customers, setCustomers] = useState([]);
+    const [currentImage, setCurrentImage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
@@ -31,6 +33,7 @@ export default function AdminImageEdit() {
                 ]);
 
                 const image = imageRes.data;
+                setCurrentImage(image);
                 setFormData({
                     title: image.title,
                     description: image.description,
@@ -38,13 +41,12 @@ export default function AdminImageEdit() {
                     assigned_to: image.assigned_to,
                 });
                 setCustomers(customersRes.data);
-                setLoading(false);
             } catch (err) {
                 setError(err.response?.data?.message || "Failed to load image data.");
+            } finally {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, [id]);
 
@@ -56,7 +58,6 @@ export default function AdminImageEdit() {
         e.preventDefault();
         setError("");
         setSuccessMsg("");
-
         try {
             await api.put(`/admin/images/${id}`, formData, { withCredentials: true });
             setSuccessMsg("Image updated successfully.");
@@ -65,75 +66,82 @@ export default function AdminImageEdit() {
         }
     };
 
-    if (loading) return <Container style={{ marginTop: "100px" }}><p>Loading...</p></Container>;
+    if (loading) return (
+        <div className="page-wrapper">
+            <Container><p className="text-muted">Loading...</p></Container>
+        </div>
+    );
 
     return (
-        <Container className="mt-5 w-50">
-            <Card>
-                <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h4 className="mb-0">Edit Image</h4>
-                        <Button variant="outline-secondary" size="sm" onClick={() => navigate("/admin/images")}>
-                            Back to Images
-                        </Button>
-                    </div>
+        <div className="page-wrapper">
+            <Container>
+                <div className="section-header" style={{ marginBottom: '28px' }}>
+                    <h4>Edit Image</h4>
+                    <Button variant="outline-secondary" size="sm" onClick={() => navigate("/admin/images")}>
+                        ← Back to Images
+                    </Button>
+                </div>
 
-                    {error && <Alert variant="danger" dismissible onClose={() => setError("")}>{error}</Alert>}
-                    {successMsg && <Alert variant="success" dismissible onClose={() => setSuccessMsg("")}>{successMsg}</Alert>}
+                <Row className="g-4 justify-content-center">
+                    {currentImage && (
+                        <Col xs={12} lg={4}>
+                            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                                <img
+                                    src={`http://localhost:5000/${currentImage.image_path}`}
+                                    alt={currentImage.title}
+                                    style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
+                                />
+                                <div style={{ padding: '14px 16px' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Image</div>
+                                </div>
+                            </div>
+                        </Col>
+                    )}
 
-                    <Form onSubmit={handleSubmit}>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Title</Form.Label>
-                            <Form.Control
-                                name="title"
-                                type="text"
-                                value={formData.title}
-                                onChange={handleChange}
-                                required
-                            />
-                        </Form.Group>
+                    <Col xs={12} lg={currentImage ? 7 : 8}>
+                        <div className="form-card">
+                            {error && <Alert variant="danger" dismissible onClose={() => setError("")} className="mb-4">{error}</Alert>}
+                            {successMsg && <Alert variant="success" dismissible onClose={() => setSuccessMsg("")} className="mb-4">{successMsg}</Alert>}
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control
-                                name="description"
-                                as="textarea"
-                                rows={3}
-                                value={formData.description}
-                                onChange={handleChange}
-                                required
-                            />
-                        </Form.Group>
+                            <Form onSubmit={handleSubmit}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Title</Form.Label>
+                                    <Form.Control name="title" type="text" value={formData.title} onChange={handleChange} required />
+                                </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>Starting Price ($)</Form.Label>
-                            <Form.Control
-                                name="starting_price"
-                                type="number"
-                                value={formData.starting_price}
-                                onChange={handleChange}
-                                required
-                            />
-                        </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Description</Form.Label>
+                                    <Form.Control name="description" as="textarea" rows={3} value={formData.description} onChange={handleChange} required />
+                                </Form.Group>
 
-                        <Form.Group className="mb-4">
-                            <Form.Label>Assign to Customer</Form.Label>
-                            <Form.Select name="assigned_to" value={formData.assigned_to} onChange={handleChange} required>
-                                <option value="">Select Customer</option>
-                                {customers.map((customer) => (
-                                    <option key={customer.id} value={customer.id}>
-                                        {customer.username} ({customer.email})
-                                    </option>
-                                ))}
-                            </Form.Select>
-                        </Form.Group>
+                                <Row className="g-3 mb-4">
+                                    <Col sm={6}>
+                                        <Form.Group>
+                                            <Form.Label>Starting Price ($)</Form.Label>
+                                            <Form.Control name="starting_price" type="number" value={formData.starting_price} onChange={handleChange} min="0" step="0.01" required />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col sm={6}>
+                                        <Form.Group>
+                                            <Form.Label>Assign to Customer</Form.Label>
+                                            <Form.Select name="assigned_to" value={formData.assigned_to} onChange={handleChange} required>
+                                                <option value="">Select customer</option>
+                                                {customers.map((c) => (
+                                                    <option key={c.id} value={c.id}>{c.username} ({c.email})</option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
 
-                        <Button variant="dark" type="submit">
-                            Save Changes
-                        </Button>
-                    </Form>
-                </Card.Body>
-            </Card>
-        </Container>
+                                <Button variant="primary" type="submit" className="w-100">
+                                    Save Changes
+                                </Button>
+                            </Form>
+                        </div>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
     );
 }

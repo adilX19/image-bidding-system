@@ -1,12 +1,8 @@
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
 import { useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
-import Container from 'react-bootstrap/Container';
-import { jwtDecode } from 'jwt-decode';
+import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
 import { AuthContext } from '../context/AuthContext';
-import Card from 'react-bootstrap/Card';
-
 
 export default function Login() {
     const [username, setUsername] = useState('');
@@ -17,56 +13,60 @@ export default function Login() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-
+        setError('');
         try {
-            const response = await login({ username: username, password: password });
-
-            if (response.success == false) {
-                navigate('/')
-            }
-
-            if (response.role === 'admin') {
-                navigate('/admin');
-            } else if (response.role === 'customer') {
-                navigate('/customer');
-            }
+            const response = await login({ username, password });
+            if (!response.success) { navigate('/'); return; }
+            if (response.role === 'admin') navigate('/admin');
+            else if (response.role === 'customer') navigate('/customer');
         } catch (err) {
-            console.log(err.message)
             setError(err.response?.data?.error || 'Login failed. Please try again.');
         }
-
-    }
+    };
 
     return (
-        <Container className='mt-5 w-25'>
-            <Card>
-                <Card.Body>
-                    <h5 className='mb-5 text-center'>Login to your Account</h5>
-                    <Form onSubmit={handleSubmit}>
-                        {error && <p className="error-message">{error}</p>}
-                        <Form.Group className="mb-3" controlId="formBasicEmail">
-                            <Form.Label>Username</Form.Label>
-                            <Form.Control type="text" value={username} onChange={(e) => { setUsername(e.target.value) }} placeholder="Enter username" />
-                        </Form.Group>
+        <div className="auth-page">
+            <div className="auth-card">
+                <div className="auth-logo">
+                    <div className="logo-icon">🎨</div>
+                    <h1>IMG Bidder</h1>
+                    <p>Sign in to your account</p>
+                </div>
 
-                        <Form.Group className="mb-3" controlId="formBasicPassword">
-                            <Form.Label>Password</Form.Label>
-                            <Form.Control type="password" value={password} onChange={(e) => { setPassword(e.target.value) }} placeholder="Password" />
-                        </Form.Group>
+                {error && <p className="error-message">{error}</p>}
 
-                        <Button variant="primary" type="submit">
-                            Login
-                        </Button><br /><br />
-                        <small>
-                            Not have an account? <a href='/signup'>Create account</a>
-                        </small>
-                    </Form>
-                </Card.Body>
-            </Card>
-        </Container>
-    )
+                <Form onSubmit={handleSubmit}>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Username</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Enter username"
+                            required
+                        />
+                    </Form.Group>
 
+                    <Form.Group className="mb-4">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter password"
+                            required
+                        />
+                    </Form.Group>
+
+                    <Button variant="primary" type="submit" className="w-100 mb-3">
+                        Sign In
+                    </Button>
+
+                    <p style={{ textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                        Don't have an account? <a href="/signup">Create one</a>
+                    </p>
+                </Form>
+            </div>
+        </div>
+    );
 }
-
-
-
