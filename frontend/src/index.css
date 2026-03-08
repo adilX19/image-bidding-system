@@ -29,9 +29,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
